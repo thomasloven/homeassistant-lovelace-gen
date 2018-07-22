@@ -92,8 +92,9 @@ def main(argv):
     try:
         with open(infile, 'r') as fp:
             data = yaml.load(fp)
-    except:
-        print("Could not read input files.")
+    except Exception as e:
+        print("Something went wrong.")
+        print(e)
         print("Run {} -h for help.".format(argv[0]))
         sys.exit(2)
 
