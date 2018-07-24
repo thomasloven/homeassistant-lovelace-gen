@@ -28,22 +28,26 @@ Generate ui-lovelace.yaml from lovelace/main.yaml
 
 import sys
 import os
-import getopt
 import yaml
+import shutil
 
 indir = "lovelace"
+infile = "main.yaml"
+
+outfile = "ui-lovelace.yaml"
+
+wwwdir = "www"
+resourcedir = "lovelace"
+
 helpstring = """
 usage: lovelace-gen.py [-d sourcedir] [-i input] [-o output]
-    Generates ui-lovelace.yaml from <sourcedir>/<input>.
-    Other files in <sourcedir> directory can be included using !include filename.
+    Generates ui-lovelace.yaml from lovelace/main.yaml
 
-options:
-    -d sourcedir    Directory of input yaml files
-                    Default: lovelace
-    -i input        Filename of base yaml
-                    Default: main.yaml
-    -o output       Filename of output file
-                    Default ui-lovelace.yaml
+Special commands:
+  !include <filename>
+    Is replaced by the contents of the file lovelace/<filename>
+  !resource [<path>/]<filename>
+    Copies the file lovelace/<path><filename> to www/lovelace/<filename> and is replaced with /local/lovelace/<filename>
 """
 
 def include_statement(loader, node):
@@ -54,38 +58,39 @@ def include_statement(loader, node):
     return retval
 yaml.add_constructor('!include', include_statement)
 
+def resource_statement(loader, node):
+    global indir, wwwdir, resourcedir
+    path = os.path.join(indir, loader.construct_scalar(node))
+    if not os.path.exists(path):
+        raise yaml.scanner.ScannerError('Could not find resource file {}'. format(path))
+    basename = os.path.basename(path)
+    newpath = os.path.join(wwwdir, resourcedir, basename)
+    includepath = os.path.join('/local/', resourcedir, basename)
+
+    os.makedirs(os.path.join(wwwdir, resourcedir), exist_ok=True)
+    shutil.copyfile(path, newpath)
+    return includepath
+
+yaml.add_constructor('!resource', resource_statement)
+
+
 
 def main(argv):
-    global indir
-    outfile = "ui-lovelace.yaml"
-    infile = "main.yaml"
+    global infile, outfile, indir
 
-    try:
-        opts, args = getopt.getopt(argv[1:], "hd:i:o:")
-    except getopt.GetoptError:
+    if len(argv) > 1:
         print(helpstring)
         sys.exit(2)
-
-    for opt, arg in opts:
-        if opt == '-h':
-            print(helpstring)
-            sys.exit()
-        elif opt == '-d':
-            indir = arg
-        elif opt == '-i':
-            infile = arg
-        elif opt == '-o':
-            outfile = arg
 
     infile = "{}/{}".format(indir, infile)
 
     if not os.path.isdir(indir):
         print("Directory {} not found.".format(indir))
-        print("Run {} -h for help.".format(argv[0]))
+        print("Run `{} help` for help.".format(argv[0]))
         sys.exit(2)
     if not os.path.exists(infile):
         print("File {} does not exist.".format(infile))
-        print("Run {} -h for help.".format(argv[0]))
+        print("Run `{} help` for help.".format(argv[0]))
         sys.exit(2)
 
 
@@ -95,7 +100,7 @@ def main(argv):
     except Exception as e:
         print("Something went wrong.")
         print(e)
-        print("Run {} -h for help.".format(argv[0]))
+        print("Run `{} help` for help.".format(argv[0]))
         sys.exit(2)
 
     try:

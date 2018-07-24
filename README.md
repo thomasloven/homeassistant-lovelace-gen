@@ -4,11 +4,20 @@ This script will generate a `ui-lovelace.yaml` file based off a file `lovelace/m
 
 ## Usage
 
-    lovelace-gen.py [-d sourcedir] [-i input] [-o output]
+Create a directory `<homeassistant config dir>/lovelace` and the file `<homeassistant config dir>/lovelace/main.yaml`.
 
-Generates `<output>` from `<sourcedir>/<input>`.
+Inside your homeassistant config directory, run the command:
 
-Default values are `ui-lovelace.yaml` for `<output>`, `lovelace` for `<sourcedir>` and `main.yaml` for `<input>`. Thus the script is prepared for running inside your homeassistant config directory, assuming it contains a `lovelace` directory.
+    lovelace-gen.py
+
+This will create the file `ui_lovelace.yaml`.
+
+## Special commands
+
+The following commands can be used in `lovelace/main.yaml` or any file included using the `!include` command.
+
+- `!include <filename>` is replaced with the contents of `lovelace/<filename>`.
+- `!resource [<path>/]<filename>` will copy the file `lovelace/<path>/<filename>` to `www/lovelace/<filename>` and be replaced with `/local/lovelace/<filename>`.
 
 
 ## Example
@@ -17,6 +26,11 @@ Default values are `ui-lovelace.yaml` for `<output>`, `lovelace` for `<sourcedir
 
 ```yaml
 title: My Awesome Home
+
+resources:
+  - url: !resource mosnter-card/monster-card.js
+    type: js
+
 views:
   - title: Home
     id: home
@@ -66,6 +80,8 @@ Generated `ui-lovelace.yaml`:
 # Any changes made to it will be overwritten the next time the script is run.
 
 title: My Awesome Home
+resources:
+- {type: js, url: /local/lovelace/monster-card.js}
 views:
 - cards:
   - {entity: light.cat_light, image: 'http://placekitten.com/6/200/300', type: picture_entity}
