@@ -60,18 +60,20 @@ yaml.add_constructor('!include', include_statement)
 
 def resource_statement(loader, node):
     global indir, wwwdir, resourcedir
+    version = ''
     path = os.path.join(indir, loader.construct_scalar(node))
     if '?' in path:
+        version = path.split('?')[1]
         path = path.split('?')[0]
     if not os.path.exists(path):
         raise yaml.scanner.ScannerError('Could not find resource file {}'. format(path))
-    basename = os.path.basename(os.path.join(indir, loader.construct_scalar(node)))
+    basename = os.path.basename(path)
     newpath = os.path.join(wwwdir, resourcedir, basename)
     includepath = os.path.join('/local/', resourcedir, basename)
 
     os.makedirs(os.path.join(wwwdir, resourcedir), exist_ok=True)
     shutil.copyfile(path, newpath)
-    return includepath
+    return includepath + version
 
 yaml.add_constructor('!resource', resource_statement)
 
