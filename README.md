@@ -12,6 +12,21 @@ Inside your homeassistant config directory, run the command:
 
 This will create the file `ui_lovelace.yaml`.
 
+#### Usage in Hass.io
+
+Create a directory `config/lovelace` and the file `config/lovelace/main.yaml`.
+
+In your configuration.yaml file, make a shell command:
+
+```yaml
+shell_command:
+  lovelace_gen: 'python /config/lovelace-gen.py'
+  ```
+
+Restart Home Assistant. Then run the service `shell_command.lovelace_gen`, preferably from `<hass_ip_address:port>/dev-service`.
+
+This will create the file `ui_lovelace.yaml`.
+
 ## Special commands
 
 The following commands can be used in `lovelace/main.yaml` or any file included using the `!include` command.
