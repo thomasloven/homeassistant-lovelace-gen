@@ -61,9 +61,11 @@ yaml.add_constructor('!include', include_statement)
 def resource_statement(loader, node):
     global indir, wwwdir, resourcedir
     path = os.path.join(indir, loader.construct_scalar(node))
+    if '?' in path:
+        path = path.split('?')[0]
     if not os.path.exists(path):
         raise yaml.scanner.ScannerError('Could not find resource file {}'. format(path))
-    basename = os.path.basename(path)
+    basename = os.path.basename(os.path.join(indir, loader.construct_scalar(node)))
     newpath = os.path.join(wwwdir, resourcedir, basename)
     includepath = os.path.join('/local/', resourcedir, basename)
 
