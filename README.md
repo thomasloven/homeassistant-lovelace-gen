@@ -32,7 +32,7 @@ This will create the file `ui_lovelace.yaml`.
 The following commands can be used in `lovelace/main.yaml` or any file included using the `!include` command.
 
 - `!include <filename>` is replaced with the contents of `lovelace/<filename>`.
-- `!resource [<path>/]<filename>` will copy the file `lovelace/<path>/<filename>` to `www/lovelace/<filename>` and be replaced with `/local/lovelace/<filename>`.
+- `!resource [<path>/]<filename>` will copy the file `lovelace/<path>/<filename>` to `www/lovelace/<filename>` and be replaced with `/local/lovelace/<filename>`. A timestamp will be added after the url to make sure any cache of the file is invalidated between runs.
 
 
 ## Example
@@ -43,7 +43,9 @@ The following commands can be used in `lovelace/main.yaml` or any file included 
 title: My Awesome Home
 
 resources:
-  - url: !resource mosnter-card/monster-card.js
+  - url: !resource monster-card/monster-card.js
+    type: js
+  - url: !resource tracker-card/tracker-card.js?v=0.1.4
     type: js
 
 views:
@@ -96,7 +98,8 @@ Generated `ui-lovelace.yaml`:
 
 title: My Awesome Home
 resources:
-- {type: js, url: /local/lovelace/monster-card.js}
+- {type: js, url: /local/lovelace/monster-card.js?1533670932.854793}
+- {type:js, url: /local/lovelace/tracker-card.js?1533670932.854793&v=0.1.4}
 views:
 - cards:
   - {entity: light.cat_light, image: 'http://placekitten.com/6/200/300', type: picture_entity}
