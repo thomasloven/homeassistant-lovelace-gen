@@ -33,6 +33,7 @@ The following commands can be used in `lovelace/main.yaml` or any file included 
 
 - `!include <filename>` is replaced with the contents of `lovelace/<filename>`.
 - `!resource [<path>/]<filename>` will copy the file `lovelace/<path>/<filename>` to `www/lovelace/<filename>` and be replaced with `/local/lovelace/<filename>`. A timestamp will be added after the url to make sure any cache of the file is invalidated between runs.
+- [jinja2 templates](http://jinja.pocoo.org/docs/2.10/templates/) allows for variables, loops, macros and flow controll.
 
 
 ## Example
@@ -42,10 +43,11 @@ The following commands can be used in `lovelace/main.yaml` or any file included 
 ```yaml
 title: My Awesome Home
 
+# Copy resources from anywhere to www/lovelace and include them
 resources:
   - url: !resource monster-card/monster-card.js
     type: js
-  - url: !resource tracker-card/tracker-card.js?v=0.1.4
+  - url: !resource /home/hass/tracker-card/tracker-card.js?v=0.1.4
     type: js
 
 views:
@@ -56,6 +58,7 @@ views:
         image: http://placekitten.com/6/200/300
         entity: light.cat_light
       - !include presence_tracker.yaml
+      - !include lights.yaml
   - !include family_view.yaml
 ```
 
@@ -88,6 +91,25 @@ card:
 
 ---
 
+`lovelace/lights.yaml`
+
+```yaml
+{% macro light_pe(switch, image) %}
+{ type: picture-entity,
+  entity: {{switch}},
+  image: !resource {{image}}
+  show_state: false,
+  tap_action: toggle
+}
+{% endmacro %}
+type: vertical-stack
+cards:
+  - {{ light_pe('light.kitchen_light', 'images/kitchen_light.png') }}
+  - {{ light_pe('light.bedroom', 'images/bedroom_light.png') }}
+```
+
+---
+
 Generated `ui-lovelace.yaml`:
 
 ```yaml
@@ -107,6 +129,10 @@ views:
     entities: [device_tracker.paulus, device_tracker.anne_there]
     state_filter: [home]
     type: entity_filter
+  - cards:
+      - {type: picture_entity, entity: light.kitchen_light, image: /local/lovelace/kitchen_light.png, show_state: false, tap_action: toggle}
+      - {type: picture_entity, entity: light.bedroom, image: /local/lovelace/bedroom_light.png, show_state: false, tap_action: toggle}
+    type: vertical-stack
   id: home
   title: Home
 - cards:

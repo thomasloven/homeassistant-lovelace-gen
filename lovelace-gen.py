@@ -31,6 +31,7 @@ import os
 import yaml
 import shutil
 import time
+import jinja2
 
 indir = "lovelace"
 infile = "main.yaml"
@@ -56,7 +57,9 @@ def include_statement(loader, node):
     global indir
     filename = loader.construct_scalar(node)
     with open("{}/{}".format(indir, filename), 'r') as fp:
-        retval = yaml.load(fp)
+        data = fp.read()
+    template = jinja2.Template(data)
+    retval = yaml.load(template.render())
     return retval
 yaml.add_constructor('!include', include_statement)
 
@@ -102,7 +105,9 @@ def main(argv):
 
     try:
         with open(infile, 'r') as fp:
-            data = yaml.load(fp)
+            data = fp.read()
+        template = jinja2.Template(data)
+        data = yaml.load(template.render())
     except Exception as e:
         print("Something went wrong.")
         print(e)
