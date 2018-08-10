@@ -32,6 +32,8 @@ import yaml
 import shutil
 import time
 import jinja2
+import requests
+import json
 
 indir = "lovelace"
 infile = "main.yaml"
@@ -41,9 +43,10 @@ outfile = "ui-lovelace.yaml"
 wwwdir = "www"
 resourcedir = "lovelace"
 timestamp = time.time();
+states = {}
 
 helpstring = """
-usage: lovelace-gen.py [-d sourcedir] [-i input] [-o output]
+usage: lovelace-gen.py
     Generates ui-lovelace.yaml from lovelace/main.yaml
 
 Special commands:
@@ -54,12 +57,12 @@ Special commands:
 """
 
 def include_statement(loader, node):
-    global indir
+    global indir, states
     filename = loader.construct_scalar(node)
     with open("{}/{}".format(indir, filename), 'r') as fp:
         data = fp.read()
     template = jinja2.Template(data)
-    retval = yaml.load(template.render())
+    retval = yaml.load(template.render(states=states))
     return retval
 yaml.add_constructor('!include', include_statement)
 
@@ -82,24 +85,44 @@ def resource_statement(loader, node):
 
 yaml.add_constructor('!resource', resource_statement)
 
+def get_states(base_url, password=""):
+    global states
+    headers = {}
+    if password:
+        headers['x-ha-access'] = password
+    r = requests.get(base_url+"/api/states", headers=headers)
+    if r.status_code != 200:
+        print("Could not fetch states", file=sys.stderr);
+        return
+    states = {}
+    for s in r.json():
+        domain = s['entity_id'].split('.')[0]
+        entity = s['entity_id'].split('.')[1]
+        if not domain in states:
+            states[domain] = {}
+        states[domain][entity] = s
 
 
 def main(argv):
-    global infile, outfile, indir
+    global infile, outfile, indir, states
 
     if len(argv) > 1:
-        print(helpstring)
-        sys.exit(2)
+        if len(argv) > 3:
+            print(helpstring)
+            sys.exit(2)
+        base_url = argv[1]
+        password = argv[2] if len(argv) > 2 else ""
+        get_states(base_url, password)
 
     infile = "{}/{}".format(indir, infile)
 
     if not os.path.isdir(indir):
-        print("Directory {} not found.".format(indir))
-        print("Run `{} help` for help.".format(argv[0]))
+        print("Directory {} not found.".format(indir), file=sys.stderr)
+        print("Run `{} help` for help.".format(argv[0]), file=sys.stderr)
         sys.exit(2)
     if not os.path.exists(infile):
-        print("File {} does not exist.".format(infile))
-        print("Run `{} help` for help.".format(argv[0]))
+        print("File {} does not exist.".format(infile), file=sys.stderr)
+        print("Run `{} help` for help.".format(argv[0]), file=sys.stderr)
         sys.exit(2)
 
 
@@ -107,11 +130,11 @@ def main(argv):
         with open(infile, 'r') as fp:
             data = fp.read()
         template = jinja2.Template(data)
-        data = yaml.load(template.render())
+        data = yaml.load(template.render(states=states))
     except Exception as e:
-        print("Something went wrong.")
-        print(e)
-        print("Run `{} help` for help.".format(argv[0]))
+        print("Something went wrong.", file=sys.stderr)
+        print(e, file=sys.stderr)
+        print("Run `{} help` for help.".format(argv[0]), file=sys.stderr)
         sys.exit(2)
 
     try:
@@ -124,8 +147,8 @@ def main(argv):
 """)
             fp.write(yaml.dump(data, allow_unicode=True))
     except:
-        print("Could not write to output file.")
-        print("Run {} -h for help.".format(argv[0]))
+        print("Could not write to output file.", file=sys.stderr)
+        print("Run {} -h for help.".format(argv[0]), file=sys.stderr)
         sys.exit(2)
 
 

@@ -143,3 +143,22 @@ views:
   id: family
   title: Family
 ```
+
+---
+
+---
+
+### Experimental feature
+If `lovelace-gen.py` is run with arguments `lovelace-gen.py http://ha-base-url
+password` it will populate the jinja variable `states` with the current state.
+
+Then you can do things like
+
+```yaml
+excluded_entities:
+  {% for state in states.automation %}
+  - {{ states.automation[state].entity_id }}
+  {% endfor %}
+```
+
+It doesn't work exactly like in home-assistant templates... you'll have to experiment a bit.
