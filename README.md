@@ -8,9 +8,11 @@ Create a directory `<homeassistant config dir>/lovelace` and the file `<homeassi
 
 Inside your homeassistant config directory, run the command:
 
-    lovelace-gen.py
+    ./lovelace-gen.py
 
 This will create the file `ui_lovelace.yaml`.
+
+**Note:** `lovelace-gen` requires some non-standard python packages to be installed, namely PyYAML, requests and Jinja2. Those are all required by home-assistant, so by running the script in the same environment as hass, you'll get them for free. Also, python3 is required.
 
 #### Usage in Hass.io
 
