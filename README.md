@@ -29,6 +29,22 @@ Restart Home Assistant. Then run the service `shell_command.lovelace_gen`, prefe
 
 This will create the file `ui_lovelace.yaml`.
 
+**If something doesn't work**
+
+First of all, check the homeassistant log. It might show an error
+code. 1 probably means the command wasn't called with correct
+arguments, 2 that the file `lovelace/main.yaml` couldn't be opened, 4
+that the oputput file could not be written and 3 that something went
+wrong in processing the input.
+
+Code 4 could have several causes. Among those are
+
+- badly formated yaml
+- a file included using `!include` or `!resouce` could not be found
+- something wrong in a template.
+
+With a bit of luck, you might get a more useful error message if you set your home assistant log level to `debug` (see [manual](https://www.home-assistant.io/components/logger/)).
+
 ## Special commands
 
 The following commands can be used in `lovelace/main.yaml` or any file included using the `!include` command.

@@ -109,7 +109,7 @@ def main(argv):
     if len(argv) > 1:
         if len(argv) > 3:
             print(helpstring)
-            sys.exit(2)
+            sys.exit(1)
         base_url = argv[1]
         password = argv[2] if len(argv) > 2 else ""
         get_states(base_url, password)
@@ -135,7 +135,7 @@ def main(argv):
         print("Something went wrong.", file=sys.stderr)
         print(e, file=sys.stderr)
         print("Run `{} help` for help.".format(argv[0]), file=sys.stderr)
-        sys.exit(2)
+        sys.exit(3)
 
     try:
         with open(outfile, 'w') as fp:
@@ -149,7 +149,7 @@ def main(argv):
     except:
         print("Could not write to output file.", file=sys.stderr)
         print("Run {} -h for help.".format(argv[0]), file=sys.stderr)
-        sys.exit(2)
+        sys.exit(4)
 
 
 if __name__ == '__main__':
