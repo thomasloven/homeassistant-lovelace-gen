@@ -50,6 +50,7 @@ With a bit of luck, you might get a more useful error message if you set your ho
 The following commands can be used in `lovelace/main.yaml` or any file included using the `!include` command.
 
 - `!include <filename>` is replaced with the contents of `lovelace/<filename>`.
+- `!secret <identifier>` is replaced with the value from `secrets.yaml` for `<identifier>`.
 - `!resource [<path>/]<filename>` will copy the file `lovelace/<path>/<filename>` to `www/lovelace/<filename>` and be replaced with `/local/lovelace/<filename>`. A timestamp will be added after the url to make sure any cache of the file is invalidated between runs.
 - [jinja2 templates](http://jinja.pocoo.org/docs/2.10/templates/) allows for variables, loops, macros and flow controll.
 
