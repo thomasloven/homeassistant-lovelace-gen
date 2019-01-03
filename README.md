@@ -1,6 +1,11 @@
 # lovelace-gen.py A lovelace configuration generator for [homeassistant](https://www.home-assistant.io)
 
-This script will generate a `ui-lovelace.yaml` file based off a file `lovelace/main.yaml`. Other files in the `lovelace` directory can be included into the configuration using the `!include filename` statement. This allows for separation of the configuration into several files, and reuse of cards.
+This script is a pre-processor for your lovelace configuration.
+
+It will read the file `lovelace/main.yaml` and generate `ui-lovelace.yaml` from it.
+
+Using this generator will allow you to use jinja2 templates in your lovelace yaml configuration.
+It can also simplify cache invalidation when including scripts and images in your configuration.
 
 ## Usage
 
@@ -8,176 +13,136 @@ Create a directory `<homeassistant config dir>/lovelace` and the file `<homeassi
 
 Inside your homeassistant config directory, run the command:
 
-    ./lovelace-gen.py
+    python3 lovelace-gen.py
 
 This will create the file `ui_lovelace.yaml`.
 
-**Note:** `lovelace-gen` requires some non-standard python packages to be installed, namely PyYAML, requests and Jinja2. Those are all required by home-assistant, so by running the script in the same environment as hass, you'll get them for free. Also, python3 is required.
+**Note:** `lovelace-gen` requires some non-standard python packages to be installed, namely ruamel and Jinja2. Those are all required by home-assistant, so by running the script in the same environment as hass, you'll get them for free. Also, python3 is required.
 
-#### Usage in Hass.io
+### Optional arguments
 
-Create a directory `config/lovelace` and the file `config/lovelace/main.yaml`.
+`lovelace-gen` will try to find the location of the `lovelace/` directory automatically. If you wish to specify it manually, you can do so as an argument:
+
+    python3 lovelace-gen.py /opt/homeassistant/config/lovelace
+
+By default `ui-lovelace` will be generated in the parent directory of the `lovelace/` directory. This can be changed with the `-o` flag:
+
+    python3 lovelace-gen.py -o ui-lovelace-example.yaml
+
+### Usage in Hass.io
 
 In your configuration.yaml file, make a shell command:
 
 ```yaml
 shell_command:
   lovelace_gen: 'python /config/lovelace-gen.py'
-  ```
+```
 
 Restart Home Assistant. Then run the service `shell_command.lovelace_gen`, preferably from `<hass_ip_address:port>/dev-service`.
 
-This will create the file `ui_lovelace.yaml`.
+This will create the file `/config/ui_lovelace.yaml`.
 
-**If something doesn't work**
+#### Errors
 
-First of all, check the homeassistant log. It might show an error
-code. 1 probably means the command wasn't called with correct
-arguments, 2 that the file `lovelace/main.yaml` couldn't be opened, 4
-that the oputput file could not be written and 3 that something went
-wrong in processing the input.
+If the processing fails, the script will try to tell you why.
 
-Code 4 could have several causes. Among those are
+However, if you are running it as a `shell_command` from Home Assistant, you will - by default - only get the return code in the log.
 
-- badly formated yaml
-- a file included using `!include` or `!resouce` could not be found
-- something wrong in a template.
+The possible return codes for errors are:
 
-With a bit of luck, you might get a more useful error message if you set your home assistant log level to `debug` (see [manual](https://www.home-assistant.io/components/logger/)).
+| Code | Problem |
+|---|---|
+| 2 | Could not find `lovelace/main.yaml`. |
+| 3 | Something failed in the yaml processing. |
+| 4 | Could not write `ui-lovelace.yaml`. |
 
-## Special commands
+However, you can probably get more information by setting your [log level](https://www.home-assistant.io/components/logger/) to `debug`.
 
-The following commands can be used in `lovelace/main.yaml` or any file included using the `!include` command.
+## Special directives
 
-- `!include <filename>` is replaced with the contents of `lovelace/<filename>`.
-- `!secret <identifier>` is replaced with the value from `secrets.yaml` for `<identifier>`.
-- `!resource [<path>/]<filename>` will copy the file `lovelace/<path>/<filename>` to `www/lovelace/<filename>` and be replaced with `/local/lovelace/<filename>`. A timestamp will be added after the url to make sure any cache of the file is invalidated between runs.
-- [jinja2 templates](http://jinja.pocoo.org/docs/2.10/templates/) allows for variables, loops, macros and flow controll.
+The following directives can be used in `lovelace/main.yaml` or any file included using the `!include` directive.
 
+### `!include <filename>
+Includes the file `lovelace/<filename>`. Works exactly the same way as the built-in include directive, except it's rooted in the `lovelace/` directory.
 
-## Example
+### `!secret <key>`
+Is replaced with the value of the key `<key>` in the file `secrets.yaml` which *must* be in the parent directory of `lovelace/`.
+
+### `!file <path>`
+Is replaced with `<path>?XXX` where `XXX` is a random number that changes each time you run `lovelace-gen`.
+The reason for this is that e.g.
+
+```yaml
+image: !file /local/images/photo.png
+```
+
+may be replaced with
+
+```yaml
+image: /local/images/photo.png?234567890234567893456789.234567
+```
+
+which - to your browser is a totally different filename than e.g. `photo.png?09876540987654098765434567890.35783290` and thus **can not** be loaded from cache.
+
+Incredibly useful if you like to play around with custom plugins or change your images and have problem with things not updating as you expected them to.
+
+## Jinja2 templates
+Lovelace-gen allows you to use jinja templating anywhere in your configuration:
 
 `lovelace/main.yaml`:
 
 ```yaml
 title: My Awesome Home
 
+{% set plugins = [
+  '/local/lovelace-fold-entity-row/fold-entity-row.js',
+  '/local/lovelace-layout-card/layout-card.js',
+  '/local/lovelace-player/lovelace-player.js',
+  ] %}
+
 # Copy resources from anywhere to www/lovelace and include them
 resources:
-  - url: !resource monster-card/monster-card.js
+  {% for p in plugins %}
+  - url: !file {{ p }}
     type: js
-  - url: !resource /home/hass/tracker-card/tracker-card.js?v=0.1.4
-    type: js
-
-views:
-  - title: Home
-    id: home
-    cards:
-      - type: picture_entity
-        image: http://placekitten.com/6/200/300
-        entity: light.cat_light
-      - !include presence_tracker.yaml
-      - !include lights.yaml
-  - !include family_view.yaml
-```
-
----
-
-`lovelace/family_view.yaml`:
-
-```yaml
-title: Family
-id: family
-cards:
-  - !include presence_tracker.yaml
-```
-
----
-
-`lovelace/presence_tracker.yaml`:
-
-```yaml
-type: entity_filter
-entities:
-  - device_tracker.paulus
-  - device_tracker.anne_there
-state_filter:
-  - 'home'
-card:
-  type: glance
-  title: People that are home
-```
-
----
-
-`lovelace/lights.yaml`
-
-```yaml
-{% macro light_pe(switch, image) %}
-{ type: picture-entity,
-  entity: {{switch}},
-  image: !resource {{image}}
-  show_state: false,
-  tap_action: toggle
-}
-{% endmacro %}
-type: vertical-stack
-cards:
-  - {{ light_pe('light.kitchen_light', 'images/kitchen_light.png') }}
-  - {{ light_pe('light.bedroom', 'images/bedroom_light.png') }}
-```
-
----
-
-Generated `ui-lovelace.yaml`:
-
-```yaml
-
-# This file is automatically generated by lovelace-gen.py
-# https://github.com/thomasloven/homeassistant-lovelace-gen
-# Any changes made to it will be overwritten the next time the script is run.
-
-title: My Awesome Home
-resources:
-- {type: js, url: /local/lovelace/monster-card.js?1533670932.854793}
-- {type:js, url: /local/lovelace/tracker-card.js?1533670932.854793&v=0.1.4}
-views:
-- cards:
-  - {entity: light.cat_light, image: 'http://placekitten.com/6/200/300', type: picture_entity}
-  - card: {title: People that are home, type: glance}
-    entities: [device_tracker.paulus, device_tracker.anne_there]
-    state_filter: [home]
-    type: entity_filter
-  - cards:
-      - {type: picture_entity, entity: light.kitchen_light, image: /local/lovelace/kitchen_light.png, show_state: false, tap_action: toggle}
-      - {type: picture_entity, entity: light.bedroom, image: /local/lovelace/bedroom_light.png, show_state: false, tap_action: toggle}
-    type: vertical-stack
-  id: home
-  title: Home
-- cards:
-  - card: {title: People that are home, type: glance}
-    entities: [device_tracker.paulus, device_tracker.anne_there]
-    state_filter: [home]
-    type: entity_filter
-  id: family
-  title: Family
-```
-
----
-
----
-
-### Experimental feature
-If `lovelace-gen.py` is run with arguments `lovelace-gen.py http://ha-base-url
-password` it will populate the jinja variable `states` with the current state.
-
-Then you can do things like
-
-```yaml
-excluded_entities:
-  {% for state in states.automation %}
-  - {{ states.automation[state].entity_id }}
   {% endfor %}
+
+views:
+  - title: Bottom floor
+    cards:
+      - !include floorplan.yaml
 ```
 
-It doesn't work exactly like in home-assistant templates... you'll have to experiment a bit.
+---
+
+`lovelace/floorplan.yaml
+
+```yaml
+type: picture-elements
+image: !file /local/bottom_floor.png
+elements:
+  {% set lamp = """
+    type: state-icon
+    tap_action: {action: toggle}
+    """ %}
+  {% set dimlamp = """
+    type: state-icon
+    tap_action: {action: toggle}
+    hold_action: {action: more-info}
+    """ %}
+
+  - entity: light.ceiling_hallway
+    style: { left: 50%, top: 50% }
+    {{ lamp }}
+
+  - entity: light.kitchen_table
+    style: {left: 25%, top: 30% }
+    {{ dimlamp }}
+
+  - entity: light.her_bed
+    style: {left: 75%, top: 30% }
+    {{ lamp }}
+  - entity: light.his_bed
+    style: {left: 75%, top: 35% }
+    {{ lamp }}
+```
