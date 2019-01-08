@@ -65,9 +65,6 @@ The following directives can be used in `lovelace/main.yaml` or any file include
 ### `!include <filename>
 Includes the file `lovelace/<filename>`. Works exactly the same way as the built-in include directive, except it's rooted in the `lovelace/` directory.
 
-### `!secret <key>`
-Is replaced with the value of the key `<key>` in the file `secrets.yaml` which *must* be in the parent directory of `lovelace/`.
-
 ### `!file <path>`
 Is replaced with `<path>?XXX` where `XXX` is a random number that changes each time you run `lovelace-gen`.
 The reason for this is that e.g.
@@ -85,6 +82,9 @@ image: /local/images/photo.png?234567890234567893456789.234567
 which - to your browser is a totally different filename than e.g. `photo.png?09876540987654098765434567890.35783290` and thus **can not** be loaded from cache.
 
 Incredibly useful if you like to play around with custom plugins or change your images and have problem with things not updating as you expected them to.
+
+### Note
+The built in `!secret` directive is of course also usable as normal. `lovelace-gen` ignores it, and it is instead processed by Home Assistant at run-time.
 
 ## Jinja2 templates
 Lovelace-gen allows you to use jinja templating anywhere in your configuration:
