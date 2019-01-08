@@ -62,7 +62,7 @@ However, you can probably get more information by setting your [log level](https
 
 The following directives can be used in `lovelace/main.yaml` or any file included using the `!include` directive.
 
-### `!include <filename>
+### `!include <filename>`
 Includes the file `lovelace/<filename>`. Works exactly the same way as the built-in include directive, except it's rooted in the `lovelace/` directory.
 
 ### `!file <path>`
@@ -83,7 +83,7 @@ which - to your browser is a totally different filename than e.g. `photo.png?098
 
 Incredibly useful if you like to play around with custom plugins or change your images and have problem with things not updating as you expected them to.
 
-### Note
+### Note about `!secret`
 The built in `!secret` directive is of course also usable as normal. `lovelace-gen` ignores it, and it is instead processed by Home Assistant at run-time.
 
 ## Jinja2 templates
