@@ -35,12 +35,13 @@ In your configuration.yaml file, make a shell command:
 
 ```yaml
 shell_command:
-  lovelace_gen: 'python /config/lovelace-gen.py'
+  lovelace_gen: 'python /config/lovelace-gen.py > /config/lovelace-gen.log'
 ```
 
 Restart Home Assistant. Then run the service `shell_command.lovelace_gen`, preferably from `<hass_ip_address:port>/dev-service`.
 
 This will create the file `/config/ui_lovelace.yaml`.
+Any errors will be written to `/config/lovelace-gen.log` to help you find the problem.
 
 #### Errors
 

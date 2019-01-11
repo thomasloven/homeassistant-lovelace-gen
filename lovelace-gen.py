@@ -63,7 +63,7 @@ def main():
     try:
         data = process_file(MAIN_FILE)
     except Exception as e:
-        print("Processing of yaml failed.", file=sys.stderr)
+        print("Processing of yaml failed.")
         print(e)
         raise e
         sys.exit(3)
@@ -74,7 +74,7 @@ def main():
             yaml = YAML()
             yaml.dump(data, fp)
     except Exception as e:
-        print("Writing ui-lovelace.yaml failed.", file=sys.stderr)
+        print("Writing ui-lovelace.yaml failed.")
         print(e)
         sys.exit(4)
 
