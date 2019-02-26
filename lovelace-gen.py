@@ -42,9 +42,9 @@ def file_statement(loader, node):
     path = node.value
     timestamp = time.time()
     if '?' in path:
-        return f'{path}&{str(timestamp)}'
+        return '{}&{}'.format(path, str(timestamp))
     else:
-        return f'{path}?{str(timestamp)}'
+        return '{}?{}'.format(path, str(timestamp))
 RoundTripConstructor.add_constructor("!file", file_statement)
 
 def main():
