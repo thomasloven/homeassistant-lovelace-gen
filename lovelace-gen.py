@@ -32,10 +32,12 @@ def process_file(path):
     yaml = YAML(typ='rt')
     yaml.preserve_quotes = True
     yaml.Constructor = RoundTripConstructor
-    return yaml.load(template.render())
+    return yaml.load(template.render()+ '\n')
 
 def include_statement(loader, node):
-    return process_file(node.value)
+    retval = process_file(node.value)
+    print(retval)
+    return retval
 RoundTripConstructor.add_constructor("!include", include_statement)
 
 def file_statement(loader, node):
