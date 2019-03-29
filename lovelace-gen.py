@@ -35,9 +35,7 @@ def process_file(path):
     return yaml.load(template.render()+ '\n')
 
 def include_statement(loader, node):
-    retval = process_file(node.value)
-    print(retval)
-    return retval
+    return process_file(node.value)
 RoundTripConstructor.add_constructor("!include", include_statement)
 
 def file_statement(loader, node):
