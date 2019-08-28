@@ -1,5 +1,7 @@
 # lovelace-gen.py A lovelace configuration generator for [homeassistant](https://www.home-assistant.io)
 
+# This is deprecated. Use [lovelace_gen](https://github.com/thomasloven/hass-lovelace_gen) instead.
+
 This script is a pre-processor for your lovelace configuration.
 
 It will read the file `lovelace/main.yaml` and generate `ui-lovelace.yaml` from it.

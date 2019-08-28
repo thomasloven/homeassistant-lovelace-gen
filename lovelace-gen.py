@@ -2,6 +2,7 @@ import argparse
 import os
 import sys
 import time
+import json
 
 from ruamel.yaml import YAML
 from ruamel.yaml.constructor import RoundTripConstructor
@@ -26,16 +27,19 @@ def get_input_dir(inp):
     print("Input file main.yaml not found.", file=sys.stderr)
     sys.exit(2);
 
-def process_file(path):
+def process_file(path, args={}):
     global jinja
     template = jinja.get_template(path)
     yaml = YAML(typ='rt')
     yaml.preserve_quotes = True
     yaml.Constructor = RoundTripConstructor
-    return yaml.load(template.render()+ '\n')
+    return yaml.load(template.render(args)+ '\n')
 
 def include_statement(loader, node):
-    return process_file(node.value)
+    fn, *args = node.value.split(' ',1)
+    if args:
+        args = json.loads(args[0])
+    return process_file(fn, args)
 RoundTripConstructor.add_constructor("!include", include_statement)
 
 def file_statement(loader, node):
